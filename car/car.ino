@@ -1,6 +1,14 @@
 #include <WiFi.h>
 #include <esp_now.h>
 
+// Connections
+const int motor1pin1 = 16;
+const int motor1pin2 = 17;
+const int motor2pin1 = 18;
+const int motor2pin2 = 19;
+
+// Setting PWM properties
+const int pwmChannel = 0;
 
 // Packet structure
 typedef struct dataPacket {
@@ -36,8 +44,8 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  setMotorsRight(data.pitch/70);
+  setMotorsLeft(data.pitch/70);
 }
 
 void initializeCommunication() {
@@ -50,4 +58,39 @@ void initializeCommunication() {
 
   // Register send callback
   esp_now_register_recv_cb(onDataReceived);
+}
+
+void initializeMotors() {
+  pinMode(motor1pin1, OUTPUT);
+  pinMode(motor1pin2, OUTPUT);
+  pinMode(motor2pin1, OUTPUT);
+  pinMode(motor2pin2, OUTPUT);
+}
+
+void setMotorsRight(float power) {
+  if (power < 0.4 && power > -0.4) 
+  {
+    analogWrite(motor1pin1, 0);
+    analogWrite(motor1pin2, 0);
+    return;
+  }
+  if (power > 1) power = 1;
+  if (power < -1) power = -1; 
+
+  analogWrite(motor1pin1, power > 0 ? power * 255 : 0);
+  analogWrite(motor1pin2, power < 0 ? power * -255 : 0);
+}
+
+void setMotorsLeft(float power) {
+  if (power < 0.4 && power > -0.4) 
+  {
+    analogWrite(motor2pin1, 0);
+    analogWrite(motor2pin2, 0);
+    return;
+  }
+  if (power > 1) power = 1;
+  if (power < -1) power = -1; 
+
+  analogWrite(motor2pin1, power > 0 ? power * 255 : 0);
+  analogWrite(motor2pin2, power < 0 ? power * -255 : 0);
 }
