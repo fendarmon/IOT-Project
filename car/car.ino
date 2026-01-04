@@ -56,7 +56,7 @@ void setup() {
 void loop() {
   getDistance();
 
-  if (abs(roll) > 45) {
+  if (abs(data.roll) > 45) {
       setMotorsRight(-data.roll/70);
       setMotorsLeft(data.roll/70);
   }
