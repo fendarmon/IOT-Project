@@ -1,12 +1,20 @@
 #include <WiFi.h>
 #include <esp_now.h>
 
-// Connections
+// motor connections
 const int motor1pin1 = 16;
 const int motor1pin2 = 17;
 const int motor2pin1 = 18;
 const int motor2pin2 = 19;
 
+// ultrasonic sensor connections
+const int trigPin = 5;
+const int echoPin = 4;
+
+const float SOUND_SPEED = 0.034;
+
+float distance;
+long duration;
 // Setting PWM properties
 const int pwmChannel = 0;
 
@@ -41,11 +49,21 @@ void setup() {
   Serial.begin(115200);
 
   initializeCommunication();
+  initializeMotors();
+  initializeUltrasonic();
 }
 
 void loop() {
-  setMotorsRight(data.pitch/70);
-  setMotorsLeft(data.pitch/70);
+  getDistance();
+
+  if (abs(roll) > 45) {
+      setMotorsRight(-data.roll/70);
+      setMotorsLeft(data.roll/70);
+  }
+  else {
+    setMotorsRight(distance > 10 ? data.pitch/70 : 0);
+    setMotorsLeft(distance > 10 ? data.pitch/70 : 0);
+  }
 }
 
 void initializeCommunication() {
@@ -65,6 +83,31 @@ void initializeMotors() {
   pinMode(motor1pin2, OUTPUT);
   pinMode(motor2pin1, OUTPUT);
   pinMode(motor2pin2, OUTPUT);
+}
+
+void initializeUltrasonic() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void getDistance() {
+  // Clears the trigPin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH, 25000);
+  
+  // Calculate the distance
+
+  if (duration * SOUND_SPEED/2 != 0) {
+    distance = duration * SOUND_SPEED/2;
+  }
 }
 
 void setMotorsRight(float power) {
